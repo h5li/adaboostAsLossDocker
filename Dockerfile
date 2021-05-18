@@ -7,7 +7,8 @@
 
 # scipy/machine learning (tensorflow)
 # https://hub.docker.com/repository/docker/ucsdets/scipy-ml-notebook/tags
-ARG BASE_CONTAINER=nvidia/cuda:10.1-base-ubuntu16.04
+ARG BASE_CONTAINER=nvidia/cuda:10.1-cudnn7-devel-ubuntu16.04
+
 
 FROM $BASE_CONTAINER
 
@@ -21,18 +22,14 @@ RUN rm -rf /usr/bin/python3 && \
 
 RUN apt-get update && \
 	apt-get install -y \
-			libtinfo5 htop nvidia-cuda-toolkit python3-pip wget
+			libtinfo5 htop python3-pip wget
+RUN apt-get -y --allow-change-held-packages install libcudnn7=7.6.5.32-1+cuda10.1
 
 RUN wget -O /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x /tmp/miniconda.sh && \
     /bin/bash /tmp/miniconda.sh -b -p /opt/conda
 
 ENV PATH=/opt/conda/bin:$PATH
-
-RUN conda install cudatoolkit=10.1 \
-				  cudnn \
-				  nccl \
-				  -y
 
 # Install pillow<7 due to dependency issue https://github.com/pytorch/vision/issues/1712
 RUN pip install --no-cache-dir  datascience \
@@ -42,13 +39,12 @@ RUN pip install --no-cache-dir  datascience \
 								jupyter-tensorboard \
 								pycocotools \
 								"pillow<7" \
-								tensorflow-gpu>=2.2 \ tensorflow-addons==0.11.2 \ 
+								tensorflow==2.3.0 \
+                                tensorflow-addons==0.11.2 \ 
                                 tensorflow-datasets==4.3.0 \
                                 tensorflow-estimator==2.2.0 \
                                 tensorflow-metadata==0.30.0 
-RUN pip install --no-cache-dir --upgrade jax \
-    jaxlib==0.1.66+cuda101 -f \
-    https://storage.googleapis.com/jax-releases/jax_releases.html
+RUN pip install --upgrade jax jaxlib==0.1.66+cuda101 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 
 
 # 3) install packages
